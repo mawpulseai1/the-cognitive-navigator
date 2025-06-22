@@ -1,0 +1,24 @@
+/* Output Box Styles */
+.output-box {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #444444;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.output-box h2 {
+    color: #63b3ed;
+    margin-top: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #444444;
+    margin-bottom: 12px;
+    font-size: 1.2em;
+}
+
+.output-box p {
+    color: #e2e8f0;
+    line-height: 1.6;
+    margin: 0;
+}

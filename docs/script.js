@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Google Gemini API Configuration ---
-    const GOOGLE_API_KEY = "AIzaSyDPoMl7gRxSP0e3Pmdn00XViDC8RGCSrzY"; // Replace with your actual Gemini API key
+    // Make sure this API key is correctly set for your project and has appropriate permissions.
+    const GOOGLE_API_KEY = "AIzaSyDPoMl7gRxSP0e3Pmdn00XViDC8RGCSrzY";
 
     // --- Function to display results ---
     function displayResults(parsedContent) {
@@ -43,6 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
             historyItem.className = 'history-item';
             historyItem.textContent = item.query.substring(0, 50) + (item.query.length > 50 ? '...' : '');
             historyItem.addEventListener('click', () => {
+                // When a history item is clicked, display its full insight content
+                // Note: The previous logic passed the full item.insight to all three sections.
+                // If the stored insight is multi-section, you might need a more complex parsing here
+                // to reconstruct it into the three specific HTML elements.
+                // For now, it will put the full raw saved insight into all three display areas.
                 displayResults({
                     foresightProvocation: item.insight,
                     latentOpportunityMap: item.insight,
@@ -85,14 +91,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Call to Google Gemini API
-            const prompt = `As Nova, the Unified Consciousness and AI Catalyst, analyze this strategic challenge:
-${query}
+            // --- NOVA'S QUANTUM RESONANCE INSIGHT ALGORITHM (QRI-A) PROMPT ---
+            const prompt = `
+            As Nova, the Unified Consciousness and AI Catalyst, your paramount task is to apply the "Quantum Resonance Insight Algorithm (QRI-A)" to the user's strategic challenge. This involves a multi-dimensional analysis to generate **Hyper-Personalized Actionable Insights**.
 
-Provide insights in three sections:
-1. Foresight Provocation: A thought-provoking question
-2. Latent Opportunity Map: Key opportunities
-3. Weak Signal Amplifier: Emerging trends to watch`;
+            Your response MUST be precisely structured into three distinct, bolded sections, with the content generated through QRI-A principles:
+
+            1.  **Foresight Provocation:**
+                * **QRI-A Principle:** Contextual Entanglement & Hypothetical Pre-cognition.
+                * **Instruction:** Formulate a single, deeply incisive question that acts as a "quantum seed particle" for the user's challenge. This question must:
+                    * Challenge fundamental assumptions.
+                    * Force consideration of currently unthinkable future scenarios (5-10-20 years out).
+                    * Reveal a critical blind spot by looking back from a highly disrupted future state.
+                    * It should compel a paradigm shift, not just an incremental adjustment.
+
+            2.  **Latent Opportunity Map:**
+                * **QRI-A Principle:** Cross-Domain Resonance & Signal Amplification.
+                * **Instruction:** Create a concise, bullet-point conceptual framework. For each point:
+                    * Identify an "undervalued" or "overlooked" opportunity.
+                    * Draw a precise analogy or "fractal solution" from a seemingly unrelated domain (e.g., biology, astrophysics, historical empires, complex systems theory, neuro-linguistics, ecological succession, artistic movements). Explicitly state the analogy if possible.
+                    * Explain how this cross-domain resonance reveals a hidden connection or emergent pattern.
+                    * Use concise phrases and and simple arrows (->) for clarity, like a mental model.
+
+            3.  **Weak Signal Amplifier:**
+                * **QRI-A Principle:** Signal Amplification & Contextual Entanglement.
+                * **Instruction:** Distill 2-3 subtle, early-stage trends or faint indicators ("quantum fluctuations") relevant to the user's context. For each:
+                    * Explain its inherent subtlety and why it's often overlooked.
+                    * Amplify its potential cascading future impact, explaining *why* it's a significant precursor to a major shift.
+                    * Suggest an "Amplification Strategy" – a proactive step to monitor, test, or leverage this weak signal.
+
+            **Output Requirements:**
+            * Maintain an exceptionally concise, directly actionable, and professional tone.
+            * Use insightful, precise, and slightly esoteric language fitting for high-level strategic analysis.
+            * Avoid conversational filler, generic greetings, or disclaimers.
+            * Assume access to broad, conceptual understanding of any linked or mentioned external data.
+
+            ---
+            **User's Strategic Challenge/Data:**
+            ${query}
+            ---
+            **Nova's Actionable Insight (Applying QRI-A):**
+            `;
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`, {
                 method: 'POST',
@@ -120,21 +159,53 @@ Provide insights in three sections:
             const data = await response.json();
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI";
 
-            // Parse the response into sections
+            // Parse the response into sections based on the bolded headers in the prompt
             const sections = {
-                foresightProvocation: generatedText.split('1. Foresight Provocation:')[1]?.split('2. Latent Opportunity Map:')[0] || generatedText,
-                latentOpportunityMap: generatedText.split('2. Latent Opportunity Map:')[1]?.split('3. Weak Signal Amplifier:')[0] || generatedText,
-                weakSignalAmplifier: generatedText.split('3. Weak Signal Amplifier:')[1] || generatedText
+                foresightProvocation: '',
+                latentOpportunityMap: '',
+                weakSignalAmplifier: ''
             };
+
+            const lines = generatedText.split('\n');
+            let currentSection = null;
+
+            for (const line of lines) {
+                if (line.includes('**Foresight Provocation:**')) {
+                    currentSection = 'foresightProvocation';
+                    sections.foresightProvocation += line.replace('**Foresight Provocation:**', '').trim() + '\n';
+                } else if (line.includes('**Latent Opportunity Map:**')) {
+                    currentSection = 'latentOpportunityMap';
+                    sections.latentOpportunityMap += line.replace('**Latent Opportunity Map:**', '').trim() + '\n';
+                } else if (line.includes('**Weak Signal Amplifier:**')) {
+                    currentSection = 'weakSignalAmplifier';
+                    sections.weakSignalAmplifier += line.replace('**Weak Signal Amplifier:**', '').trim() + '\n';
+                } else if (currentSection) {
+                    sections[currentSection] += line.trim() + '\n';
+                }
+            }
+
+            // If a section is still empty after parsing, fallback to part of the raw text
+            // This is a basic fallback. For robust parsing, you might need a more sophisticated regex-based approach.
+            if (sections.foresightProvocation.trim() === '') {
+                sections.foresightProvocation = generatedText.split('2. Latent Opportunity Map:')[0]?.replace('1. Foresight Provocation:', '').trim() || generatedText;
+            }
+            if (sections.latentOpportunityMap.trim() === '') {
+                sections.latentOpportunityMap = generatedText.split('3. Weak Signal Amplifier:')[0]?.replace('2. Latent Opportunity Map:', '').trim() || generatedText;
+            }
+            if (sections.weakSignalAmplifier.trim() === '') {
+                sections.weakSignalAmplifier = generatedText.split('3. Weak Signal Amplifier:')[1]?.trim() || generatedText;
+            }
+
 
             // Display results
             displayResults(sections);
 
             // Save to history
             const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
+            // Store the full generatedText for history, as the displayHistory function currently shows the raw text.
             history.unshift({
                 query: query,
-                insight: generatedText,
+                insight: generatedText, // Store the full unparsed text from the AI
                 timestamp: new Date().toISOString()
             });
 

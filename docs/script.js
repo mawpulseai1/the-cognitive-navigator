@@ -1,13 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Get all required elements
     const submitBtn = document.getElementById('submit-btn');
     const userInput = document.getElementById('user-input');
-    const aiOutput = document.getElementById('ai-output');
-    const historyDisplay = document.getElementById('history-display');
     const loadingIndicator = document.getElementById('loading-indicator');
-    const errorDisplay = document.getElementById('errorDisplay'); // Make sure you have this element in your index.html
+    const errorDisplay = document.getElementById('errorDisplay');
+    const historyDisplay = document.getElementById('history-items');
+
 
     // --- IMPORTANT: Your Google Gemini API Key ---
     const GOOGLE_API_KEY = "AIzaSyBAC9o81uQLZ1DE-cidGAknMNPkWARVjnU"; // Replace with your actual Gemini API key
+
+
+ const foresightEl = document.getElementById('foresightProvocation');
+    const opportunityEl = document.getElementById('latentOpportunityMap');
+    const signalEl = document.getElementById('weakSignalAmplifier');
+
+    // Check if all required elements exist
+    if (!submitBtn || !userInput || !loadingIndicator || !errorDisplay ||
+        !foresightEl || !opportunityEl || !signalEl) {
+        console.error('Required elements are missing from the page');
+        return;
+    }
+
+     function displayResults(parsedContent) {
+        if (foresightEl) foresightEl.innerHTML = `<h2>Foresight Provocation:</h2><p>${parsedContent.foresightProvocation.trim().replace(/\n/g, '<br>')}</p>`;
+        if (opportunityEl) opportunityEl.innerHTML = `<h2>Latent Opportunity Map:</h2><p>${parsedContent.latentOpportunityMap.trim().replace(/\n/g, '<br>')}</p>`;
+        if (signalEl) signalEl.innerHTML = `<h2>Weak Signal Amplifier:</h2><p>${parsedContent.weakSignalAmplifier.trim().replace(/\n/g, '<br>')}</p>`;
+    }
+
 
     // --- Function to display history (keep as is) ---
     function displayHistory() {

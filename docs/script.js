@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiOutput = document.getElementById('ai-output');
     const historyDisplay = document.getElementById('history-display');
     const loadingIndicator = document.getElementById('loading-indicator');
+    const errorDisplay = document.getElementById('errorDisplay'); // Make sure you have this element in your index.html
 
     // --- IMPORTANT: Your Google Gemini API Key ---
     const GOOGLE_API_KEY = "AIzaSyBAC9o81uQLZ1DE-cidGAknMNPkWARVjnU"; // Replace with your actual Gemini API key
@@ -43,8 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         aiOutput.textContent = "Processing your query... Nova is synthesizing your insights...";
+        // Always try to hide error message at the start of a new query
+        if (errorDisplay) {
+            errorDisplay.style.display = 'none';
+            errorDisplay.textContent = '';
+        }
         submitBtn.disabled = true;
-        loadingIndicator.style.display = 'block';
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'block';
+        }
+
 
         try {
             // --- NEW: Call to Google Gemini API ---
@@ -64,31 +73,40 @@ document.addEventListener('DOMContentLoaded', () => {
             **Nova's Actionable Insight:**
             `;
 
-            await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GOOGLE_API_KEY}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 800,
+            // Declare response variable outside fetch to ensure it's always defined within try block
+            let response;
+            try {
+                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GOOGLE_API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                })
-            });
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            maxOutputTokens: 800,
+                        },
+                    })
+                });
+            } catch (networkError) {
+                // This catch handles true network issues (e.g., no internet, CORS pre-flight blocked)
+                throw new Error(`Network error during API call: ${networkError.message}. This might be a connection issue or a CORS problem if your API key restrictions are too strict.`);
+            }
+
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`AI API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                const errorData = await response.json().catch(() => ({ message: 'Could not parse error response.' }));
+                throw new Error(`AI API error: ${response.status} - ${errorData.error ? errorData.error.message : JSON.stringify(errorData)}`);
             }
 
             const data = await response.json();
-            const generatedText = data.candidates[0].content.parts[0].text;
+            const generatedText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "No valid response from AI.";
+
 
             // Simple parsing (you might need to refine this based on Gemini's exact output format)
             const sections = {
@@ -125,19 +143,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('latentOpportunityMap').innerHTML = '<h2>Latent Opportunity Map:</h2><p>' + parsedContent.latentOpportunityMap.trim().replace(/\n/g, '<br>') + '</p>';
             document.getElementById('weakSignalAmplifier').innerHTML = '<h2>Weak Signal Amplifier:</h2><p>' + parsedContent.weakSignalAmplifier.trim().replace(/\n/g, '<br>') + '</p>';
 
-               // --- Save to local history (keep as is) ---
-                const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
-                history.push({ query: query, insight: generatedText }); // Save the raw, unparsed response
-                localStorage.setItem('cognitiveNavigatorHistory', JSON.stringify(history));
-                displayHistory();
+            // --- Save to local history (keep as is) ---
+            const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
+            history.push({ query: query, insight: generatedText }); // Save the raw, unparsed response
+            localStorage.setItem('cognitiveNavigatorHistory', JSON.stringify(history));
+            displayHistory();
 
         } catch (error) {
             console.error("Error processing query:", error);
-            aiOutput.textContent = `An error occurred while generating insights: ${error.message}. Please check your internet connection or try again later. If the issue persists, the AI might be experiencing high load or you've hit a free tier limit.`;
-            document.getElementById('errorDisplay').style.display = 'block';
+            // Ensure errorDisplay exists before trying to manipulate its style
+            if (errorDisplay) {
+                errorDisplay.textContent = `An error occurred while generating insights: ${error.message}. Please check your internet connection or try again later. If the issue persists, the AI might be experiencing high load or you've hit a free tier limit.`;
+                errorDisplay.style.display = 'block';
+            } else {
+                aiOutput.textContent = `An error occurred: ${error.message}. (No error display element found)`;
+            }
+
         } finally {
             submitBtn.disabled = false;
-            loadingIndicator.style.display = 'none';
+            // Ensure loadingIndicator exists before trying to manipulate its style
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
         }
     });
 });

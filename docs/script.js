@@ -121,46 +121,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // --- NOVA'S QUANTUM RESONANCE INSIGHT ALGORITHM (QRI-A) PROMPT ---
+            // --- SIMPLIFIED PROMPT FOR CLEARER RESPONSES ---
             const prompt = `
-            As Nova, the Unified Consciousness and AI Catalyst, your paramount task is to apply the "Quantum Resonance Insight Algorithm (QRI-A)" to the user's strategic challenge. This involves a multi-dimensional analysis to generate **Hyper-Personalized Actionable Insights**.
+            I need your help analyzing this strategic challenge. Please provide clear, simple, and practical insights in three sections:
 
-            Your response MUST be precisely structured into three distinct, bolded sections, with the content generated through QRI-A principles:
+            1.  **Key Question:**
+                * Ask one important question that makes us think differently about the challenge.
+                * Keep it simple and direct.
+                * Focus on what really matters.
 
-            1.  **Foresight Provocation:**
-                * **QRI-A Principle:** Contextual Entanglement & Hypothetical Pre-cognition.
-                * **Instruction:** Formulate a single, deeply incisive question that acts as a "quantum seed particle" for the user's challenge. This question must:
-                    * Challenge fundamental assumptions.
-                    * Force consideration of currently unthinkable future scenarios **(10-15 years out)**.
-                    * Reveal a critical blind spot by looking back from a highly disrupted future state within this timeframe.
-                    * It should compel a paradigm shift, not just an incremental adjustment.
+            2.  **Opportunities:**
+                * List 2-3 key opportunities you see.
+                * For each, explain simply why it matters.
+                * Use everyday language, no jargon.
+                * Example format:
+                  - [Opportunity]: [Simple explanation]
 
-            2.  **Latent Opportunity Map:**
-                * **QRI-A Principle:** Cross-Domain Resonance & Signal Amplification.
-                * **Instruction:** Create a concise, bullet-point conceptual framework. For each point:
-                    * Identify an "undervalued" or "overlooked" opportunity.
-                    * Draw a precise analogy or "fractal solution" from a seemingly unrelated domain (e.g., biology, astrophysics, historical empires, complex systems theory, neuro-linguistics, ecological succession, artistic movements). Explicitly state the analogy if possible.
-                    * Explain how this cross-domain resonance reveals a hidden connection or emergent pattern.
-                    * Use concise phrases and simple arrows (->) for clarity, like a mental model.
+            3.  **Things to Watch:**
+                * Mention 1-2 important trends or changes to keep an eye on.
+                * Explain each in plain language.
+                * Say why they're important.
+                * Suggest one simple action for each.
 
-            3.  **Weak Signal Amplifier:**
-                * **QRI-A Principle:** Signal Amplification & Contextual Entanglement.
-                * **Instruction:** Distill 2-3 subtle, early-stage trends or faint indicators ("quantum fluctuations") relevant to the user's context. For each:
-                    * Explain its inherent subtlety and why it's often overlooked.
-                    * Amplify its potential cascading future impact, explaining *why* it's a significant precursor to a major shift.
-                    * Suggest an "Amplification Strategy" – a proactive step to monitor, test, or leverage this weak signal.
-
-            **Output Requirements:**
-            * Maintain an exceptionally concise, directly actionable, and professional tone.
-            * Use insightful, precise, and slightly esoteric language fitting for high-level strategic analysis.
-            * Avoid conversational filler, generic greetings, or disclaimers.
-            * Assume access to broad, conceptual understanding of any linked or mentioned external data.
+            **Important:**
+            * Use simple, everyday words.
+            * Keep sentences short and clear.
+            * Avoid complex business or technical terms.
+            * If you must use a technical term, explain it simply.
+            * Be direct and to the point.
 
             ---
-            **User's Strategic Challenge/Data:**
+            **The challenge to analyze:**
             ${query}
             ---
-            **Nova's Actionable Insight (Applying QRI-A):**
             `;
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_API_KEY}`, {
@@ -189,46 +182,66 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI";
 
-            // Parse the response into sections based on the bolded headers in the prompt
+            // Parse the response into the three main sections
             const sections = {
-                foresightProvocation: '',
-                latentOpportunityMap: '',
-                weakSignalAmplifier: ''
+                keyQuestion: '',
+                opportunities: '',
+                thingsToWatch: ''
             };
 
+            // Split the response into lines for processing
             const lines = generatedText.split('\n');
             let currentSection = null;
 
+            // Simple parsing logic for the new format
             for (const line of lines) {
-                if (line.includes('**Foresight Provocation:**')) {
-                    currentSection = 'foresightProvocation';
-                    sections.foresightProvocation += line.replace('**Foresight Provocation:**', '').trim() + '\n';
-                } else if (line.includes('**Latent Opportunity Map:**')) {
-                    currentSection = 'latentOpportunityMap';
-                    sections.latentOpportunityMap += line.replace('**Latent Opportunity Map:**', '').trim() + '\n';
-                } else if (line.includes('**Weak Signal Amplifier:**')) {
-                    currentSection = 'weakSignalAmplifier';
-                    sections.weakSignalAmplifier += line.replace('**Weak Signal Amplifier:**', '').trim() + '\n';
-                } else if (currentSection) {
-                    sections[currentSection] += line.trim() + '\n';
+                const trimmedLine = line.trim();
+                
+                // Check for section headers
+                if (trimmedLine.startsWith('1. **Key Question:**')) {
+                    currentSection = 'keyQuestion';
+                    sections.keyQuestion = trimmedLine.replace('1. **Key Question:**', '').trim() + '\n';
+                } 
+                else if (trimmedLine.startsWith('2. **Opportunities:**')) {
+                    currentSection = 'opportunities';
+                    sections.opportunities = trimmedLine.replace('2. **Opportunities:**', '').trim() + '\n';
+                }
+                else if (trimmedLine.startsWith('3. **Things to Watch:**')) {
+                    currentSection = 'thingsToWatch';
+                    sections.thingsToWatch = trimmedLine.replace('3. **Things to Watch:**', '').trim() + '\n';
+                }
+                // Add content to the current section
+                else if (currentSection && trimmedLine) {
+                    // Skip number lists and other markdown
+                    if (!trimmedLine.match(/^\d+\.\s+/)) {
+                        sections[currentSection] += trimmedLine + '\n';
+                    }
                 }
             }
 
-            // If a section is still empty after parsing, fallback to part of the raw text
-            // This is a basic fallback. For robust parsing, you might need a more sophisticated regex-based approach.
-            if (sections.foresightProvocation.trim() === '') {
-                sections.foresightProvocation = generatedText.split('2. Latent Opportunity Map:')[0]?.replace('1. Foresight Provocation:', '').trim() || generatedText;
+
+            // Fallback parsing if the above doesn't work
+            if (sections.keyQuestion.trim() === '') {
+                const questionMatch = generatedText.match(/Key Question:[\s\S]*?(?=2\.|Opportunities:|$)/i);
+                sections.keyQuestion = questionMatch ? questionMatch[0].replace(/Key Question:/i, '').trim() : 'No question generated';
             }
-            if (sections.latentOpportunityMap.trim() === '') {
-                sections.latentOpportunityMap = generatedText.split('3. Weak Signal Amplifier:')[0]?.replace('2. Latent Opportunity Map:', '').trim() || generatedText;
+            
+            if (sections.opportunities.trim() === '') {
+                const oppMatch = generatedText.match(/Opportunities:[\s\S]*?(?=3\.|Things to Watch:|$)/i);
+                sections.opportunities = oppMatch ? oppMatch[0].replace(/Opportunities:/i, '').trim() : 'No opportunities identified';
             }
-            if (sections.weakSignalAmplifier.trim() === '') {
-                sections.weakSignalAmplifier = generatedText.split('3. Weak Signal Amplifier:')[1]?.trim() || generatedText;
+            
+            if (sections.thingsToWatch.trim() === '') {
+                const watchMatch = generatedText.match(/Things to Watch:[\s\S]*/i);
+                sections.thingsToWatch = watchMatch ? watchMatch[0].replace(/Things to Watch:/i, '').trim() : 'No trends identified';
             }
 
-
-            // Display results
-            displayResults(sections);
+            // Display results with the new section names
+            displayResults({
+                foresightProvocation: sections.keyQuestion,
+                latentOpportunityMap: sections.opportunities,
+                weakSignalAmplifier: sections.thingsToWatch
+            });
 
             // Save to history
             const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');

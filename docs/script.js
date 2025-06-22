@@ -101,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 * **QRI-A Principle:** Contextual Entanglement & Hypothetical Pre-cognition.
                 * **Instruction:** Formulate a single, deeply incisive question that acts as a "quantum seed particle" for the user's challenge. This question must:
                     * Challenge fundamental assumptions.
-                    * Force consideration of currently unthinkable future scenarios (5-10-20 years out).
-                    * Reveal a critical blind spot by looking back from a highly disrupted future state.
+                    * Force consideration of currently unthinkable future scenarios **(10-15 years out)**.
+                    * Reveal a critical blind spot by looking back from a highly disrupted future state within this timeframe.
                     * It should compel a paradigm shift, not just an incremental adjustment.
 
             2.  **Latent Opportunity Map:**
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     * Identify an "undervalued" or "overlooked" opportunity.
                     * Draw a precise analogy or "fractal solution" from a seemingly unrelated domain (e.g., biology, astrophysics, historical empires, complex systems theory, neuro-linguistics, ecological succession, artistic movements). Explicitly state the analogy if possible.
                     * Explain how this cross-domain resonance reveals a hidden connection or emergent pattern.
-                    * Use concise phrases and and simple arrows (->) for clarity, like a mental model.
+                    * Use concise phrases and simple arrows (->) for clarity, like a mental model.
 
             3.  **Weak Signal Amplifier:**
                 * **QRI-A Principle:** Signal Amplification & Contextual Entanglement.

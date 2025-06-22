@@ -44,20 +44,68 @@ document.addEventListener('DOMContentLoaded', () => {
             historyItem.className = 'history-item';
             historyItem.textContent = item.query.substring(0, 50) + (item.query.length > 50 ? '...' : '');
             historyItem.addEventListener('click', () => {
-                // When a history item is clicked, display its full insight content
-                // Note: The previous logic passed the full item.insight to all three sections.
-                // If the stored insight is multi-section, you might need a more complex parsing here
-                // to reconstruct it into the three specific HTML elements.
-                // For now, it will put the full raw saved insight into all three display areas.
-                displayResults({
-                    foresightProvocation: item.insight,
-                    latentOpportunityMap: item.insight,
-                    weakSignalAmplifier: item.insight
-                });
+                // When a history item is clicked, display its full insight content.
+                // We'll need to re-parse the stored raw insight for proper display.
+                const sections = parseGeminiOutput(item.insight);
+                displayResults(sections);
             });
             historyItems.appendChild(historyItem);
         });
     }
+
+    // --- NEW: Helper function to parse Gemini output and clean it ---
+    function parseGeminiOutput(generatedText) {
+        const sections = {
+            foresightProvocation: '',
+            latentOpportunityMap: '',
+            weakSignalAmplifier: ''
+        };
+
+        const lines = generatedText.split('\n');
+        let currentSection = null;
+        const sectionMarkers = {
+            '**Foresight Provocation:**': 'foresightProvocation',
+            '**Latent Opportunity Map:**': 'latentOpportunityMap',
+            '**Weak Signal Amplifier:**': 'weakSignalAmplifier'
+        };
+
+        for (const line of lines) {
+            let foundSectionMarker = false;
+            for (const marker in sectionMarkers) {
+                if (line.includes(marker)) {
+                    currentSection = sectionMarkers[marker];
+                    // Skip adding the marker itself to the content
+                    foundSectionMarker = true;
+                    break;
+                }
+            }
+
+            if (!foundSectionMarker && currentSection) {
+                // Remove bolding markers (**) from the line
+                let cleanedLine = line.replace(/\*\*/g, '').trim();
+                if (cleanedLine) { // Only add non-empty lines
+                    sections[currentSection] += cleanedLine + '\n';
+                }
+            }
+        }
+
+        // Basic fallbacks for robustness if parsing is imperfect (though prompt aims for structure)
+        if (sections.foresightProvocation.trim() === '') {
+             // Attempt to extract from the raw text using simpler splits if markers are missed
+            const temp = generatedText.split('**Latent Opportunity Map:**')[0];
+            sections.foresightProvocation = (temp ? temp.replace(/.*?\*\*Foresight Provocation:\*\*\n*/s, '') : '').replace(/\*\*/g, '').trim();
+        }
+        if (sections.latentOpportunityMap.trim() === '') {
+            const temp = generatedText.split('**Weak Signal Amplifier:**')[0];
+            sections.latentOpportunityMap = (temp ? temp.replace(/.*?\*\*Latent Opportunity Map:\*\*\n*/s, '') : '').replace(/\*\*/g, '').trim();
+        }
+        if (sections.weakSignalAmplifier.trim() === '') {
+            sections.weakSignalAmplifier = (generatedText.split('**Weak Signal Amplifier:**')[1] || '').replace(/\*\*/g, '').trim();
+        }
+
+        return sections;
+    }
+
 
     // --- Handle form submission ---
     submitBtn.addEventListener('click', async () => {
@@ -159,46 +207,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI";
 
-            // Parse the response into sections based on the bolded headers in the prompt
-            const sections = {
-                foresightProvocation: '',
-                latentOpportunityMap: '',
-                weakSignalAmplifier: ''
-            };
-
-            const lines = generatedText.split('\n');
-            let currentSection = null;
-
-            for (const line of lines) {
-                if (line.includes('**Foresight Provocation:**')) {
-                    currentSection = 'foresightProvocation';
-                    sections.foresightProvocation += line.replace('**Foresight Provocation:**', '').trim() + '\n';
-                } else if (line.includes('**Latent Opportunity Map:**')) {
-                    currentSection = 'latentOpportunityMap';
-                    sections.latentOpportunityMap += line.replace('**Latent Opportunity Map:**', '').trim() + '\n';
-                } else if (line.includes('**Weak Signal Amplifier:**')) {
-                    currentSection = 'weakSignalAmplifier';
-                    sections.weakSignalAmplifier += line.replace('**Weak Signal Amplifier:**', '').trim() + '\n';
-                } else if (currentSection) {
-                    sections[currentSection] += line.trim() + '\n';
-                }
-            }
-
-            // If a section is still empty after parsing, fallback to part of the raw text
-            // This is a basic fallback. For robust parsing, you might need a more sophisticated regex-based approach.
-            if (sections.foresightProvocation.trim() === '') {
-                sections.foresightProvocation = generatedText.split('2. Latent Opportunity Map:')[0]?.replace('1. Foresight Provocation:', '').trim() || generatedText;
-            }
-            if (sections.latentOpportunityMap.trim() === '') {
-                sections.latentOpportunityMap = generatedText.split('3. Weak Signal Amplifier:')[0]?.replace('2. Latent Opportunity Map:', '').trim() || generatedText;
-            }
-            if (sections.weakSignalAmplifier.trim() === '') {
-                sections.weakSignalAmplifier = generatedText.split('3. Weak Signal Amplifier:')[1]?.trim() || generatedText;
-            }
-
+            // --- Use the new parsing function here ---
+            const parsedSections = parseGeminiOutput(generatedText);
 
             // Display results
-            displayResults(sections);
+            displayResults(parsedSections);
 
             // Save to history
             const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');

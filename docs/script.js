@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             **Nova's Actionable Insight:**
             `;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`, {
+            await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GOOGLE_API_KEY}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

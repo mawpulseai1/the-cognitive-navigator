@@ -22,11 +22,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Make sure this API key is correctly set for your project and has appropriate permissions.
     const GOOGLE_API_KEY = "AIzaSyDPoMl7gRxSP0e3Pmdn00XViDC8RGCSrzY";
 
-    // --- Function to display results ---
+    // --- Function to display results with formatted markdown ---
     function displayResults(parsedContent) {
-        if (foresightEl) foresightEl.innerHTML = `<h2>Foresight Provocation:</h2><p>${parsedContent.foresightProvocation.trim().replace(/\n/g, '<br>')}</p>`;
-        if (opportunityEl) opportunityEl.innerHTML = `<h2>Latent Opportunity Map:</h2><p>${parsedContent.latentOpportunityMap.trim().replace(/\n/g, '<br>')}</p>`;
-        if (signalEl) signalEl.innerHTML = `<h2>Weak Signal Amplifier:</h2><p>${parsedContent.weakSignalAmplifier.trim().replace(/\n/g, '<br>')}</p>`;
+        // Format Foresight Provocation
+        let fpContent = parsedContent.foresightProvocation.trim()
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+            .replace(/\*\s(.*?)(?=\n|$)/g, '• $1<br>') // Bullet points
+            .replace(/\n{2,}/g, '<br><br>'); // Double newlines to paragraph breaks
+            
+        // Format Latent Opportunity Map
+        let lomContent = parsedContent.latentOpportunityMap.trim()
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*\s(.*?)(?=\n|$)/g, '• $1<br>')
+            .replace(/\n{2,}/g, '<br><br>');
+            
+        // Format Weak Signal Amplifier
+        let wsaContent = parsedContent.weakSignalAmplifier.trim()
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*\s(.*?)(?=\n|$)/g, '• $1<br>')
+            .replace(/\n{2,}/g, '<br><br>');
+
+        // Update the DOM elements
+        if (foresightEl) foresightEl.innerHTML = `
+            <h2>Foresight Provocation</h2>
+            <div class="insight-content">${fpContent || 'No content available'}</div>
+        `;
+        
+        if (opportunityEl) opportunityEl.innerHTML = `
+            <h2>Latent Opportunity Map</h2>
+            <div class="insight-content">${lomContent || 'No content available'}</div>
+        `;
+        
+        if (signalEl) signalEl.innerHTML = `
+            <h2>Weak Signal Amplifier</h2>
+            <div class="insight-content">${wsaContent || 'No content available'}</div>
+        `;
     }
 
     // --- Function to display history ---
@@ -44,68 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
             historyItem.className = 'history-item';
             historyItem.textContent = item.query.substring(0, 50) + (item.query.length > 50 ? '...' : '');
             historyItem.addEventListener('click', () => {
-                // When a history item is clicked, display its full insight content.
-                // We'll need to re-parse the stored raw insight for proper display.
-                const sections = parseGeminiOutput(item.insight);
-                displayResults(sections);
+                // When a history item is clicked, display its full insight content
+                // Note: The previous logic passed the full item.insight to all three sections.
+                // If the stored insight is multi-section, you might need a more complex parsing here
+                // to reconstruct it into the three specific HTML elements.
+                // For now, it will put the full raw saved insight into all three display areas.
+                displayResults({
+                    foresightProvocation: item.insight,
+                    latentOpportunityMap: item.insight,
+                    weakSignalAmplifier: item.insight
+                });
             });
             historyItems.appendChild(historyItem);
         });
     }
-
-    // --- NEW: Helper function to parse Gemini output and clean it ---
-    function parseGeminiOutput(generatedText) {
-        const sections = {
-            foresightProvocation: '',
-            latentOpportunityMap: '',
-            weakSignalAmplifier: ''
-        };
-
-        const lines = generatedText.split('\n');
-        let currentSection = null;
-        const sectionMarkers = {
-            '**Foresight Provocation:**': 'foresightProvocation',
-            '**Latent Opportunity Map:**': 'latentOpportunityMap',
-            '**Weak Signal Amplifier:**': 'weakSignalAmplifier'
-        };
-
-        for (const line of lines) {
-            let foundSectionMarker = false;
-            for (const marker in sectionMarkers) {
-                if (line.includes(marker)) {
-                    currentSection = sectionMarkers[marker];
-                    // Skip adding the marker itself to the content
-                    foundSectionMarker = true;
-                    break;
-                }
-            }
-
-            if (!foundSectionMarker && currentSection) {
-                // Remove bolding markers (**) from the line
-                let cleanedLine = line.replace(/\*\*/g, '').trim();
-                if (cleanedLine) { // Only add non-empty lines
-                    sections[currentSection] += cleanedLine + '\n';
-                }
-            }
-        }
-
-        // Basic fallbacks for robustness if parsing is imperfect (though prompt aims for structure)
-        if (sections.foresightProvocation.trim() === '') {
-             // Attempt to extract from the raw text using simpler splits if markers are missed
-            const temp = generatedText.split('**Latent Opportunity Map:**')[0];
-            sections.foresightProvocation = (temp ? temp.replace(/.*?\*\*Foresight Provocation:\*\*\n*/s, '') : '').replace(/\*\*/g, '').trim();
-        }
-        if (sections.latentOpportunityMap.trim() === '') {
-            const temp = generatedText.split('**Weak Signal Amplifier:**')[0];
-            sections.latentOpportunityMap = (temp ? temp.replace(/.*?\*\*Latent Opportunity Map:\*\*\n*/s, '') : '').replace(/\*\*/g, '').trim();
-        }
-        if (sections.weakSignalAmplifier.trim() === '') {
-            sections.weakSignalAmplifier = (generatedText.split('**Weak Signal Amplifier:**')[1] || '').replace(/\*\*/g, '').trim();
-        }
-
-        return sections;
-    }
-
 
     // --- Handle form submission ---
     submitBtn.addEventListener('click', async () => {
@@ -207,11 +189,46 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI";
 
-            // --- Use the new parsing function here ---
-            const parsedSections = parseGeminiOutput(generatedText);
+            // Parse the response into sections based on the bolded headers in the prompt
+            const sections = {
+                foresightProvocation: '',
+                latentOpportunityMap: '',
+                weakSignalAmplifier: ''
+            };
+
+            const lines = generatedText.split('\n');
+            let currentSection = null;
+
+            for (const line of lines) {
+                if (line.includes('**Foresight Provocation:**')) {
+                    currentSection = 'foresightProvocation';
+                    sections.foresightProvocation += line.replace('**Foresight Provocation:**', '').trim() + '\n';
+                } else if (line.includes('**Latent Opportunity Map:**')) {
+                    currentSection = 'latentOpportunityMap';
+                    sections.latentOpportunityMap += line.replace('**Latent Opportunity Map:**', '').trim() + '\n';
+                } else if (line.includes('**Weak Signal Amplifier:**')) {
+                    currentSection = 'weakSignalAmplifier';
+                    sections.weakSignalAmplifier += line.replace('**Weak Signal Amplifier:**', '').trim() + '\n';
+                } else if (currentSection) {
+                    sections[currentSection] += line.trim() + '\n';
+                }
+            }
+
+            // If a section is still empty after parsing, fallback to part of the raw text
+            // This is a basic fallback. For robust parsing, you might need a more sophisticated regex-based approach.
+            if (sections.foresightProvocation.trim() === '') {
+                sections.foresightProvocation = generatedText.split('2. Latent Opportunity Map:')[0]?.replace('1. Foresight Provocation:', '').trim() || generatedText;
+            }
+            if (sections.latentOpportunityMap.trim() === '') {
+                sections.latentOpportunityMap = generatedText.split('3. Weak Signal Amplifier:')[0]?.replace('2. Latent Opportunity Map:', '').trim() || generatedText;
+            }
+            if (sections.weakSignalAmplifier.trim() === '') {
+                sections.weakSignalAmplifier = generatedText.split('3. Weak Signal Amplifier:')[1]?.trim() || generatedText;
+            }
+
 
             // Display results
-            displayResults(parsedSections);
+            displayResults(sections);
 
             // Save to history
             const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');

@@ -1,12 +1,48 @@
-/* Output Box Styles */
-.output-box {
-    background: #000000;
+/* History Container */
+.history-container {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #2d3748;
+}
+
+.history-container h3 {
+    color: #a0aec0;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+/* History Items */
+.history-item {
+    padding: 12px 15px;
+    margin: 8px 0;
+    background: #1a202c;
+    color: #e2e8f0;
+    border-left: 3px solid #63b3ed;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.history-item:hover {
+    background: #2d3748;
     color: #ffffff;
-    border: 1px solid #444444;
+    transform: translateX(3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Output Box Styling */
+.output-box {
+    background: #1a1f2e;
+    color: #e2e8f0;
+    border: 1px solid #2d3748;
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 25px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
 .output-box h2 {
@@ -33,14 +69,6 @@
     margin-bottom: 1em;
     display: block;
     content: "";
-}
-
-.insight-content > *:first-child {
-    margin-top: 0;
-}
-
-.insight-content > *:last-child {
-    margin-bottom: 0;
 }
 
 /* Bullet point styling */

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cognitive Navigator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="loading.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="app-title">The Cognitive Navigator</h1>
+        <p id="tagline">Your AI Catalyst for Unseen Opportunities and Strategic Foresight.</p>
+
+        <div id="guidance-text">
+            <p>Welcome, visionary! The Cognitive Navigator is not a general chatbot. It is your dedicated AI partner for deep, strategic insight and conceptual breakthroughs.</p>
+            <p>To begin, paste relevant documents, web links, or simply articulate your most pressing strategic challenge or a complex problem you're grappling with. The more context you provide, the more precise and actionable your foresight will be.</p>
+            <p>Expect not just answers, but "Foresight Provocations" (strategic questions to challenge your assumptions), "Latent Opportunity Maps" (conceptual frameworks revealing hidden connections), and "Weak Signal Amplifiers" (early trend detections).</p>
+            <p>Unleash your potential. What strategic challenge awaits navigation?</p>
+        </div>
+
+        <textarea id="user-input" placeholder="e.g., 'Analyze these market reports for emerging tech trends and their impact on our supply chain.' Or 'What are the hidden risks in integrating AI into our customer service? Link: [article URL]'" rows="10"></textarea>
+
+        <div class="button-container">
+            <button id="submit-btn">Get Foresight</button>
+            <div id="loading-indicator" class="loading-spinner"></div>
+        </div>
+
+        <div id="output-display">
+            <h2>Generated Insights:</h2>
+            <pre id="ai-output">Your hyper-personalized insights will appear here...</pre>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>

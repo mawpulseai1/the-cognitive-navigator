@@ -1,0 +1,112 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #0f172a; /* Dark blue-gray */
+    color: #e2e8f0; /* Light off-white */
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align to top */
+    min-height: 100vh;
+}
+
+.container {
+    background-color: #1a202c; /* Slightly lighter dark */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 800px;
+    margin-top: 50px; /* Push down from top */
+    border: 1px solid #2d3748; /* Subtle border */
+}
+
+#app-title {
+    color: #63b3ed; /* Soft blue */
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 2.5em;
+}
+
+#tagline {
+    color: #a0aec0; /* Lighter gray */
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+#guidance-text {
+    background-color: #2d3748; /* Even lighter dark for context box */
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    font-size: 0.95em;
+    color: #cbd5e0; /* Off-white for guidance text */
+    border-left: 4px solid #63b3ed; /* Accent border */
+}
+
+#guidance-text p {
+    margin-bottom: 10px;
+}
+
+textarea {
+    width: calc(100% - 20px); /* Adjust for padding */
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #4a5568; /* Darker border */
+    background-color: #2d3748; /* Matches guidance text box */
+    color: #e2e8f0;
+    font-size: 1em;
+    resize: vertical; /* Allow vertical resizing */
+    min-height: 150px;
+}
+
+textarea::placeholder {
+    color: #718096; /* Darker placeholder text */
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    background-color: #63b3ed; /* Soft blue */
+    color: #1a202c; /* Dark text for button */
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #4299e1; /* Slightly darker blue on hover */
+}
+
+#output-display {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed #4a5568; /* Dashed separator */
+}
+
+#output-display h2 {
+    color: #63b3ed;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+#ai-output {
+    background-color: #0f172a; /* Darkest for output */
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #4a5568;
+    min-height: 200px;
+    white-space: pre-wrap; /* Preserve whitespace and wrap lines */
+    word-wrap: break-word; /* Break long words */
+    font-family: 'Fira Code', 'Cascadia Code', monospace; /* Monospaced font for code-like output */
+    font-size: 0.95em;
+    color: #90cdf4; /* Lighter blue for output text */
+    overflow-x: auto; /* Allow horizontal scrolling if lines are too long */
+}

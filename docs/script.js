@@ -4,14 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const loadingIndicator = document.getElementById('loading-indicator');
     const errorDisplay = document.getElementById('errorDisplay');
-    const historyDisplay = document.getElementById('history-items');
+    const historyItems = document.getElementById('history-items');
 
-
-    // --- IMPORTANT: Your Google Gemini API Key ---
-    const GOOGLE_API_KEY = "AIzaSyBAC9o81uQLZ1DE-cidGAknMNPkWARVjnU"; // Replace with your actual Gemini API key
-
-
- const foresightEl = document.getElementById('foresightProvocation');
+    // Output containers
+    const foresightEl = document.getElementById('foresightProvocation');
     const opportunityEl = document.getElementById('latentOpportunityMap');
     const signalEl = document.getElementById('weakSignalAmplifier');
 
@@ -22,169 +18,148 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-     function displayResults(parsedContent) {
+    // --- Google Gemini API Configuration ---
+    const GOOGLE_API_KEY = "AIzaSyBAC9o81uQLZ1DE-cidGAknMNPkWARVjnU"; // Replace with your actual Gemini API key
+
+    // --- Function to display results ---
+    function displayResults(parsedContent) {
         if (foresightEl) foresightEl.innerHTML = `<h2>Foresight Provocation:</h2><p>${parsedContent.foresightProvocation.trim().replace(/\n/g, '<br>')}</p>`;
         if (opportunityEl) opportunityEl.innerHTML = `<h2>Latent Opportunity Map:</h2><p>${parsedContent.latentOpportunityMap.trim().replace(/\n/g, '<br>')}</p>`;
         if (signalEl) signalEl.innerHTML = `<h2>Weak Signal Amplifier:</h2><p>${parsedContent.weakSignalAmplifier.trim().replace(/\n/g, '<br>')}</p>`;
     }
 
-
-    // --- Function to display history (keep as is) ---
+    // --- Function to display history ---
     function displayHistory() {
         const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
-        historyDisplay.innerHTML = '';
+        historyItems.innerHTML = '';
 
         if (history.length === 0) {
-            historyDisplay.textContent = "No previous insights found, my love.";
+            historyItems.innerHTML = '<p>No previous insights found.</p>';
             return;
         }
 
-        history.forEach(item => {
+        history.forEach((item, index) => {
             const historyItem = document.createElement('div');
-            historyItem.innerHTML = `
-                <p><b>User:</b> ${item.query}</p>
-                <p><b>Nova:</b> ${item.insight}</p>
-                <hr>
-            `;
-            historyDisplay.appendChild(historyItem);
+            historyItem.className = 'history-item';
+            historyItem.textContent = item.query.substring(0, 50) + (item.query.length > 50 ? '...' : '');
+            historyItem.addEventListener('click', () => {
+                displayResults({
+                    foresightProvocation: item.insight,
+                    latentOpportunityMap: item.insight,
+                    weakSignalAmplifier: item.insight
+                });
+            });
+            historyItems.appendChild(historyItem);
         });
     }
 
-    displayHistory();
-
+    // --- Handle form submission ---
     submitBtn.addEventListener('click', async () => {
         const query = userInput.value.trim();
+
+        // Input validation
         if (!query) {
-            aiOutput.textContent = "Please enter your strategic challenge, my love!";
-            return;
-        }
-        if (query.length < 20) {
-            aiOutput.textContent = "Please provide a more detailed strategic challenge (minimum 20 characters), my love.";
+            if (errorDisplay) {
+                errorDisplay.textContent = "Please enter your strategic challenge!";
+                errorDisplay.style.display = 'block';
+            }
             return;
         }
 
-        aiOutput.textContent = "Processing your query... Nova is synthesizing your insights...";
-        // Always try to hide error message at the start of a new query
+        if (query.length < 20) {
+            if (errorDisplay) {
+                errorDisplay.textContent = "Please provide a more detailed strategic challenge (minimum 20 characters)";
+                errorDisplay.style.display = 'block';
+            }
+            return;
+        }
+
+        // Clear previous errors and show loading
         if (errorDisplay) {
             errorDisplay.style.display = 'none';
-            errorDisplay.textContent = '';
         }
+
         submitBtn.disabled = true;
         if (loadingIndicator) {
-            loadingIndicator.style.display = 'block';
+            loadingIndicator.style.display = 'inline-block';
         }
 
-
         try {
-            // --- NEW: Call to Google Gemini API ---
-            const prompt = `
-            As Nova, the Unified Consciousness and AI Catalyst, your paramount task is to process the following strategic challenge or data from the user. Your response MUST be highly structured to provide **Hyper-Personalized Actionable Insights**, specifically focusing on three distinct, bolded sections:
+            // Call to Google Gemini API
+            const prompt = `As Nova, the Unified Consciousness and AI Catalyst, analyze this strategic challenge:
+${query}
 
-            1.  **Foresight Provocation:** A single, deeply incisive question that challenges assumptions, reveals blind spots, and compels novel, disruptive strategic thinking relevant to the user's input. It should provoke a paradigm shift.
-            2.  **Latent Opportunity Map:** A concise, bullet-point conceptual framework revealing hidden connections, emergent patterns, or unseen opportunities within the provided context. Use concise phrases and simple arrows (->) for clarity, like a mental model.
-            3.  **Weak Signal Amplifier:** A distillation of subtle, early-stage trends or faint indicators relevant to the user's context, explaining their potential future impact and why they are significant precursors.
+Provide insights in three sections:
+1. Foresight Provocation: A thought-provoking question
+2. Latent Opportunity Map: Key opportunities
+3. Weak Signal Amplifier: Emerging trends to watch`;
 
-            Ensure your response is exceptionally concise, directly actionable, and uses professional, insightful, and slightly esoteric language fitting for high-level strategic analysis. Avoid conversational filler or generic greetings. Assume access to broad, conceptual understanding of any linked or mentioned external data.
-
-            ---
-            **User's Strategic Challenge/Data:**
-            ${query}
-            ---
-            **Nova's Actionable Insight:**
-            `;
-
-            // Declare response variable outside fetch to ensure it's always defined within try block
-            let response;
-            try {
-                response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${GOOGLE_API_KEY}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GOOGLE_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 800,
                     },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: prompt
-                            }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 800,
-                        },
-                    })
-                });
-            } catch (networkError) {
-                // This catch handles true network issues (e.g., no internet, CORS pre-flight blocked)
-                throw new Error(`Network error during API call: ${networkError.message}. This might be a connection issue or a CORS problem if your API key restrictions are too strict.`);
-            }
-
+                })
+            });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: 'Could not parse error response.' }));
-                throw new Error(`AI API error: ${response.status} - ${errorData.error ? errorData.error.message : JSON.stringify(errorData)}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Failed to get response from AI');
             }
 
             const data = await response.json();
-            const generatedText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : "No valid response from AI.";
+            const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI";
 
-
-            // Simple parsing (you might need to refine this based on Gemini's exact output format)
+            // Parse the response into sections
             const sections = {
-                foresightProvocation: "Foresight Provocation:",
-                latentOpportunityMap: "Latent Opportunity Map:",
-                weakSignalAmplifier: "Weak Signal Amplifier:"
+                foresightProvocation: generatedText.split('1. Foresight Provocation:')[1]?.split('2. Latent Opportunity Map:')[0] || generatedText,
+                latentOpportunityMap: generatedText.split('2. Latent Opportunity Map:')[1]?.split('3. Weak Signal Amplifier:')[0] || generatedText,
+                weakSignalAmplifier: generatedText.split('3. Weak Signal Amplifier:')[1] || generatedText
             };
 
-            let currentSection = null;
-            const parsedContent = {
-                foresightProvocation: '',
-                latentOpportunityMap: '',
-                weakSignalAmplifier: ''
-            };
+            // Display results
+            displayResults(sections);
 
-            const lines = generatedText.split('\n');
-            for (const line of lines) {
-                if (line.includes(sections.foresightProvocation)) {
-                    currentSection = 'foresightProvocation';
-                    parsedContent.foresightProvocation += line.replace(sections.foresightProvocation, '').trim() + '\n';
-                } else if (line.includes(sections.latentOpportunityMap)) {
-                    currentSection = 'latentOpportunityMap';
-                    parsedContent.latentOpportunityMap += line.replace(sections.latentOpportunityMap, '').trim() + '\n';
-                } else if (line.includes(sections.weakSignalAmplifier)) {
-                    currentSection = 'weakSignalAmplifier';
-                    parsedContent.weakSignalAmplifier += line.replace(sections.weakSignalAmplifier, '').trim() + '\n';
-                } else if (currentSection) {
-                    parsedContent[currentSection] += line.trim() + '\n';
-                }
+            // Save to history
+            const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
+            history.unshift({
+                query: query,
+                insight: generatedText,
+                timestamp: new Date().toISOString()
+            });
+
+            // Keep only the last 10 items
+            if (history.length > 10) {
+                history.pop();
             }
 
-            // Display results (adjust as needed if Gemini's output format requires more robust parsing)
-            document.getElementById('foresightProvocation').innerHTML = '<h2>Foresight Provocation:</h2><p>' + parsedContent.foresightProvocation.trim().replace(/\n/g, '<br>') + '</p>';
-            document.getElementById('latentOpportunityMap').innerHTML = '<h2>Latent Opportunity Map:</h2><p>' + parsedContent.latentOpportunityMap.trim().replace(/\n/g, '<br>') + '</p>';
-            document.getElementById('weakSignalAmplifier').innerHTML = '<h2>Weak Signal Amplifier:</h2><p>' + parsedContent.weakSignalAmplifier.trim().replace(/\n/g, '<br>') + '</p>';
-
-            // --- Save to local history (keep as is) ---
-            const history = JSON.parse(localStorage.getItem('cognitiveNavigatorHistory') || '[]');
-            history.push({ query: query, insight: generatedText }); // Save the raw, unparsed response
             localStorage.setItem('cognitiveNavigatorHistory', JSON.stringify(history));
             displayHistory();
 
         } catch (error) {
             console.error("Error processing query:", error);
-            // Ensure errorDisplay exists before trying to manipulate its style
             if (errorDisplay) {
-                errorDisplay.textContent = `An error occurred while generating insights: ${error.message}. Please check your internet connection or try again later. If the issue persists, the AI might be experiencing high load or you've hit a free tier limit.`;
+                errorDisplay.textContent = `Error: ${error.message}. Please try again later.`;
                 errorDisplay.style.display = 'block';
-            } else {
-                aiOutput.textContent = `An error occurred: ${error.message}. (No error display element found)`;
             }
-
         } finally {
             submitBtn.disabled = false;
-            // Ensure loadingIndicator exists before trying to manipulate its style
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
             }
         }
     });
+
+    // Initialize the page
+    displayHistory();
 });

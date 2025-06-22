@@ -1,3 +1,5 @@
 Flask
 Flask-CORS
-google-generativeai # New/Updated dependency
+google-generativeai
+functions-framework # New dependency
+requests

@@ -1,0 +1,56 @@
+/* History container styles */
+.history-container {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #1e293b;
+    border-radius: 8px;
+    border: 1px solid #334155;
+}
+
+.history-container h2 {
+    color: #63b3ed;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    text-align: center;
+}
+
+#history-items {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.history-item {
+    background-color: #0f172a;
+    border: 1px solid #2d3748;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.history-item:hover {
+    border-color: #4299e1;
+    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.2);
+}
+
+.history-query {
+    color: #90cdf4;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.history-response {
+    color: #a0aec0;
+    white-space: pre-wrap;
+    font-size: 0.9em;
+    line-height: 1.5;
+}
+
+.history-timestamp {
+    color: #718096;
+    font-size: 0.8em;
+    text-align: right;
+    margin-top: 8px;
+}

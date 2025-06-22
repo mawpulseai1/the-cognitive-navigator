@@ -6,6 +6,7 @@
     <title>The Cognitive Navigator</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="loading.css">
+    <link rel="stylesheet" href="history.css">
 </head>
 <body>
     <div class="container">
@@ -26,12 +27,19 @@
             <div id="loading-indicator" class="loading-spinner"></div>
         </div>
 
+        <div id="history-display" class="history-container">
+            <h2>Previous Insights</h2>
+            <div id="history-items">
+                <!-- History items will be inserted here by JavaScript -->
+            </div>
+        </div>
+
         <div id="output-display">
-            <h2>Generated Insights:</h2>
+            <h2>Current Insight</h2>
             <pre id="ai-output">Your hyper-personalized insights will appear here...</pre>
         </div>
     </div>
 
-    <script src="script.js" defer></script>
+    <script src="script-new.js" defer></script>
 </body>
 </html>

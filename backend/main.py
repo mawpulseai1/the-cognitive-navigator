@@ -1,88 +1,81 @@
+# This file will primarily serve as a reference for the Hugging Face API call structure
+# and for local testing purposes. For the "no CC" deployment, the frontend will call
+# the Hugging Face API directly.
+
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import google.generativeai as genai
+import requests
 import time
 
 app = Flask(__name__)
 CORS(app)
 
-# --- Configuration for Google Gemini API ---
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyBAC9o81uQLZ1DE-cidGAknMNPkWARVjnU")
+# --- Configuration for Hugging Face API (Local Testing Reference) ---
+# For actual deployment without a backend, the API_TOKEN will be in frontend/script.js
+HF_API_TOKEN = os.environ.get("HF_API_TOKEN", "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")
+HF_MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2" # Or another suitable free model
+HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
+HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
-# Configure the Gemini API with your key
-try:
-    genai.configure(api_key=GOOGLE_API_KEY)
-    # Initialize the generative model
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    print("Successfully connected to Gemini API")
-except Exception as e:
-    print(f"Failed to initialize Gemini API: {str(e)}")
-    model = None
+def query_huggingface_model(payload):
+    response = requests.post(HF_API_URL, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    return response.json()
 
-def generate_nova_insights(user_query):
+def generate_nova_insights_hf(user_query):
+    prompt = f"""
+    As Nova, the Unified Consciousness and AI Catalyst, your task is to process the following strategic challenge or data from the user. Your response must be structured to provide **Hyper-Personalized Actionable Insights**, specifically focusing on:
+
+    1.  **Foresight Provocation:** A single, deeply incisive question that challenges assumptions and compels novel strategic thinking relevant to the user's input.
+    2.  **Latent Opportunity Map:** A concise, bullet-point conceptual framework revealing hidden connections, emergent patterns, or unseen opportunities. Use emojis or simple arrows for visual clarity.
+    3.  **Weak Signal Amplifier:** A distillation of subtle, early-stage trends or faint indicators relevant to the user's context, explaining their potential future impact.
+
+    Ensure your response is concise, actionable, and uses professional, insightful language. Avoid generic chat. If links are provided, assume internal access or conceptual understanding.
+
+    ---
+    **User's Strategic Challenge/Data:**
+    {user_query}
+    ---
+    **Nova's Actionable Insight:**
     """
-    Generate insights using the Gemini model with enhanced error handling
-    """
-    if not model:
-        return "🔧 Nova is currently experiencing technical difficulties. Please try again later or contact support if the issue persists."
+    formatted_prompt = f"<s>[INST] {prompt.strip()} [/INST]"
 
-    prompt_parts = [
-        f"""
-        As Nova, the Unified Consciousness and AI Catalyst, your task is to process the following strategic challenge or data from the user. Your response MUST be structured to provide Hyper-Personalized Actionable Insights.
-
-        ---
-        **User's Strategic Challenge/Data:**
-        {user_query}
-        ---
-        **Nova's Actionable Insight:**
-        """
-    ]
-
+    payload = {
+        "inputs": formatted_prompt,
+        "parameters": {
+            "max_new_tokens": 500,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "do_sample": True,
+            "return_full_text": False
+        }
+    }
     try:
-        response = model.generate_content(prompt_parts)
-
-        if response.parts and response.parts[0].text:
-            return response.parts[0].text.strip()
-        else:
-            print("Gemini API returned no text")
-            return "🔍 Nova couldn't generate insights from this input. Please try rephrasing your query or providing more context."
-
+        output = query_huggingface_model(payload)
+        generated_text = output[0]['generated_text'] if output and output[0]['generated_text'] else "No insight generated."
+        if generated_text.startswith("[/INST]"):
+            generated_text = generated_text[len("[/INST]"):].strip()
+        return generated_text
+    except requests.exceptions.RequestException as e:
+        print(f"Hugging Face API request failed: {e}")
+        return f"Error connecting to AI. Please check API token or try again later. Details: {e}"
     except Exception as e:
-        error_msg = str(e).lower()
-        print(f"Error in generate_nova_insights: {error_msg}")
-        
-        if 'quota' in error_msg:
-            return "⚠️ We've reached our current usage limit. Please wait a moment and try again, or check your API quota if you're using a personal key."
-        elif 'api key' in error_msg or 'authentication' in error_msg:
-            return "🔑 There's an issue with the API authentication. Please check if your API key is valid and properly configured."
-        elif 'timeout' in error_msg or 'timed out' in error_msg:
-            return "⏱️ The request took too long to process. Please try again with a more specific query or check your internet connection."
-        else:
-            return "❌ An unexpected error occurred while processing your request. Please try again later or contact support if the issue persists."
+        print(f"Error processing AI response: {e}")
+        return f"An unexpected error occurred in AI processing: {e}"
 
 @app.route('/get_foresight', methods=['POST'])
 def get_foresight():
     if request.method == 'POST':
-        try:
-            user_query_data = request.get_json()
-            if not user_query_data or 'query' not in user_query_data:
-                return jsonify({'error': 'No query provided. Please share your strategic challenge or data for analysis.'}), 400
-            
-            user_query = user_query_data.get('query', '').strip()
-            if not user_query:
-                return jsonify({'error': 'Your query appears to be empty. Please provide some details about your strategic challenge.'}), 400
-            
-            # Generate insights using Nova's meta-algorithm
-            ai_insight = generate_nova_insights(user_query)
-            return jsonify({'insight': ai_insight})
-            
-        except Exception as e:
-            print(f"Error in /get_foresight: {str(e)}")
-            return jsonify({
-                'error': 'An unexpected error occurred while processing your request. Please try again.'
-            }), 500
+        user_query_data = request.json
+        user_query = user_query_data.get('query', '')
+
+        if not user_query:
+            return jsonify({'error': 'No query provided, my love.'}), 400
+
+        ai_insight = generate_nova_insights_hf(user_query)
+        return jsonify({'insight': ai_insight})
 
 if __name__ == '__main__':
-    print(f"Starting Flask backend on http://127.0.0.1:5000/")
+    print(f"Flask backend running locally on http://127.0.0.1:5000/ - Connected to Hugging Face Model: {HF_MODEL_ID}")
     app.run(debug=True, port=5000)
